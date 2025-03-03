@@ -30,7 +30,7 @@ app = Flask(__name__, static_folder='assets')
 
 # start new user session
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "mongodb"
+app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 
@@ -42,11 +42,12 @@ def show_dashboard():
     # if we are NOT logged in - redirect to login
     if 'userid' not in session or session['userid'] is None:
         return redirect(url_for('show_login'))
-
+    print(session)
+    print(session['userid'])
     # if we are logged in (session["userid"] is not None) - load the dashboard page
     # show the dashboard
     if request.method == "GET":   
-
+        
         if 'userid' in session and session['userid'] is not None:
             data = {
                 "user": database.get_user_info(myDb, ObjectId(session['userid'])),
@@ -198,28 +199,19 @@ def edit_profile():
 # add class
 @app.route("/add-class", methods=["POST"])
 def add_class():
-    
     # add class details to mongodb
-    class_id = database.add_class(session["userid"], request.form["classname"])
-
-    # add deadlines to mongodb 
-    num = 1
-    while True:
-        if "deadline-" + str(num) + "-name" not in request.form:
-            break 
-
-        database.add_deadline(
-            session["userid"], 
-            class_id, 
-            request.form["deadline-" + str(num) + "-name"], 
-            request.form["deadline-" + str(num) + "-type"], 
-            request.form["deadline-" + str(num) + "-due-date"]
-        )
-
-        num += 1
-    
+    database.add_class(myDb, session["userid"], request.form["classname"])
     # reload dashboard
-    return redirect(url_for("/"))
+    return redirect(url_for("show_dashboard"))
+
+
+# add deadline 
+@app.route("/add-deadline", methods=['POST'])
+def add_deadline():
+    # add class details to mongodb
+    database.add_deadlines(myDb, session["userid"], request.form["classid"], request.form["due-date"], request.form["name"], request.form["type"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
 
 
 # keep alive
