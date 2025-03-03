@@ -208,8 +208,26 @@ def add_class():
 # add deadline 
 @app.route("/add-deadline", methods=['POST'])
 def add_deadline():
-    # add class details to mongodb
+    # add deadline details to mongodb
     database.add_deadlines(myDb, session["userid"], request.form["classid"], request.form["due-date"], request.form["name"], request.form["type"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
+
+# edit deadlines
+@app.route("/edit-deadlines", methods=['POST'])
+def edit_deadlines():
+    # get all deadlines 
+    dlines = database.get_deadlines(myDb, ObjectId(session["userid"]))
+
+    # iterate through them
+    for d in dlines:
+        did = str(d["_id"])
+        if request.form[did + "-name"] != d["name"] or request.form[did + "-due-date"] != d["due_date"] or request.form[did + "-type"] != d["type"]:
+            database.edit_deadline(myDb, did, request.form[did + "-name"], request.form[did + "-due-date"], request.form[did + "-type"])
+            
+
+    # add deadline details to mongodb
+    #database.add_deadlines(myDb, session["userid"], request.form["classid"], request.form["due-date"], request.form["name"], request.form["type"])
     # reload dashboard
     return redirect(url_for("show_dashboard"))
 

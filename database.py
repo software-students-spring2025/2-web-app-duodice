@@ -420,7 +420,7 @@ def edit_profile(mydb, userID, password, bio, pic, dark_mode):
     return None
 
 
-#Update User
+# edit study session
 def edit_study(mydb,userID,studyID,date=None,goals=None,duration_hours=None):
     usetable= mydb["Studies"]
     user=  usetable.find_one({"user_id":ObjectId(userID),"_id":ObjectId(studyID)})
@@ -440,6 +440,25 @@ def edit_study(mydb,userID,studyID,date=None,goals=None,duration_hours=None):
     print("update")
     result = usetable.update_one(
           {"_id": ObjectId(studyID), "user_id": ObjectId(userID)},  
+            {"$set": updates} if "$push" not in updates else updates 
+     )
+    return None 
+    
+
+# edit deadline
+def edit_deadline(mydb, deadline_id, title, due_date, dtype):
+
+    usetable= mydb["Deadline"]
+    deadline=  usetable.find_one({"_id":ObjectId(deadline_id)})
+    if not deadline:
+        print("no existing deadline")
+        return None 
+    updates= {
+        "due_date": due_date, "name": title, "type": dtype
+    }
+    
+    result = usetable.update_one(
+          {"_id": ObjectId(deadline_id)},  
             {"$set": updates} if "$push" not in updates else updates 
      )
     return None 

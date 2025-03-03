@@ -75,12 +75,48 @@ data = {
                     {% for deadline in data["deadlines"] %}
                         <li style="display: none" class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
                             {{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
-                            ({{deadline.type}}) </li>
+                            ({{deadline.type}}) </li> <form method="post" action="/delete-deadline" class="delete-deadline"><input style="display:none" type="text" value="{{deadline._id}}" name="deadline-id"><button type="submit">Delete Deadline</button> </form>
                     {% endfor %}
                 </ul>
+
+
+                <form method="post" action="/edit-deadlines" style="display:none;" id="task-list-editing"><ul>
+
+                    {% for deadline in data["deadlines"] %}
+                        <li style="display: none"  class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
+                            <input type="text" value="{{deadline.name}}" name="{{deadline._id}}-name" required>
+                            <input type="date" value="{{deadline.due_date}}" name="{{deadline._id}}-due-date" required>
+                            <select name="{{deadline._id}}-type" id="" value="{{deadline.type}}">
+                                {% if deadline.type == "Assignment" %}
+                                <option value="Assignment" selected>Assignment</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Project">Project</option>
+                                <option value="Other">Other</option>
+                                {% elif deadline.type == "Exam" %}
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam" selected>Exam</option>
+                                <option value="Project">Project</option>
+                                <option value="Other">Other</option>
+                                {% elif deadline.type == "Project" %}
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Project" selected>Project</option>
+                                <option value="Other">Other</option>
+                                {% else %}
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Project">Project</option>
+                                <option value="Other" selected>Other</option>
+                                {% endif %}
+                              </select>
+                            </li>
+                    {% endfor %}
+                    <button type="submit" >Submit Changes</button>
+                    <button type="button" onclick="cancel_task_edit()">Cancel Changes</button>
+                </ul></form>
                 <button onclick="addTask()" id="deadline-add-button">Add Deadline</button>
                 <button onclick="editTask()" id="deadline-edit-button">Edit Deadlines</button>
-                <button onclick="editTask()" id="deadline-delete-button">Delete Deadlines</button>
+                <button onclick="deleteTask()" id="deadline-delete-button">Delete Deadline</button>
 
                 <div id="new-deadline" style="display: none;">
                     <h2>New Deadline</h2>
@@ -184,7 +220,7 @@ data = {
         }
 
         function undoAddTask() {
-            // make form visible
+            // make form invisible
             document.getElementById('new-deadline').style.display = 'none';
             document.getElementById('deadline-add-button').style.display = '';
             document.getElementById('deadline-edit-button').style.display = '';
@@ -192,12 +228,12 @@ data = {
         }
 
         function editTask(className, index) {
-            let newTask = prompt("Edit your task:", classData[className].tasks[index]);
-            if (newTask) {
-                classData[className].tasks[index] = newTask;
-                localStorage.setItem('classData', JSON.stringify(classData));
-                loadTasks(className);
-            }
+            // make form visible
+            document.getElementById('task-list-editing').style.display = '';
+            document.getElementById('task-list').style.display = 'none';
+            document.getElementById('deadline-add-button').style.display = 'none';
+            document.getElementById('deadline-edit-button').style.display = 'none';
+            document.getElementById('deadline-delete-button').style.display = 'none';
         }
         function deleteTask(className, index) {
             classData[className].tasks.splice(index, 1);
