@@ -73,9 +73,18 @@ data = {
                 <h3>Deadlines</h3>
                 <ul id="task-list">
                     {% for deadline in data["deadlines"] %}
-                        <li style="display: none" class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
+                    <div style="display: none" class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
+
+                        <li>
                             {{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
-                            ({{deadline.type}}) </li> <form method="post" action="/delete-deadline" class="delete-deadline"><input style="display:none" type="text" value="{{deadline._id}}" name="deadline-id"><button type="submit">Delete Deadline</button> </form>
+                            ({{deadline.type}}) 
+                        </li> 
+                        <form style="display: none;" method="post" action="/delete-deadline" class="delete-deadline">
+                            <input style="display:none" type="text" value="{{deadline._id}}" name="deadline-id">
+                            <button class="delete" type="submit">Delete Deadline</button> 
+                        </form>
+
+                    </div>
                     {% endfor %}
                 </ul>
 
@@ -112,11 +121,12 @@ data = {
                             </li>
                     {% endfor %}
                     <button type="submit" >Submit Changes</button>
-                    <button type="button" onclick="cancel_task_edit()">Cancel Changes</button>
+                    <button type="button" onclick="undoEditTask()">Cancel Changes</button>
                 </ul></form>
                 <button onclick="addTask()" id="deadline-add-button">Add Deadline</button>
                 <button onclick="editTask()" id="deadline-edit-button">Edit Deadlines</button>
                 <button onclick="deleteTask()" id="deadline-delete-button">Delete Deadline</button>
+                <button onclick="undoDeleteTask()" id="deadline-undo-delete-button" style="display: none;">Cancel Delete</button>
 
                 <div id="new-deadline" style="display: none;">
                     <h2>New Deadline</h2>
@@ -135,7 +145,6 @@ data = {
                         <input type="radio" id="type-other" name="type" value="Other" required>
                         <label for="type-other">Other</label>
 
-                        <input id="hidden-class-id-input" type="text" name="classid" style="display: none;" value="">
                         <p></p>
                         <button type="submit" value="Confirm Add">Confirm Add</button>
                         <button type="button" onclick="undoAddTask()" id="cancel-deadline-add">Cancel</button>
@@ -156,7 +165,11 @@ data = {
             </div>
 
             <div>
-                <button onclick="deleteClass()">Delete Class</button>
+                <form method="post" action="delete-class" >
+                    <input type="text" style="display:none;" name="classid" value="" id="delete-class-input">
+                    <button type="submit">Delete Class</button>
+                </form>
+                
             </div>
             <button onclick="backToClasses()">Back to Classes</button>
         </section>
@@ -173,16 +186,7 @@ data = {
         
 
         function deleteClass() {
-            let className = document.getElementById('class-name-header').innerText.replace('Manage Tasks and Study Sessions for ', '');
             
-            // removing the class totally
-            delete classData[className];
-            localStorage.setItem('classData', JSON.stringify(classData));
-
-            // removing class from class list
-            loadClasses();
-
-            backToClasses();
         }
 
         /*
@@ -199,15 +203,12 @@ data = {
             document.getElementById('task-session-container').style.display = 'block';
             document.getElementById('addClassForm').style.display = 'none'
 
-            document.getElementById('hidden-class-id-input').value = this_class_id
-
             let tasks = document.getElementsByClassName(this_class_name)
             for(let i = 0; i < tasks.length; i++) {
                 tasks[i].style.display = ""
             }
-            // loading the tasks
-            //document.getElementById('task-list').innerHTML = '';
-            console.log(document.getElementById('task-list').innerHTML)
+            
+            document.getElementById("delete-class-input").setAttribute('value', this_class_id)
             
         }
 
@@ -235,10 +236,40 @@ data = {
             document.getElementById('deadline-edit-button').style.display = 'none';
             document.getElementById('deadline-delete-button').style.display = 'none';
         }
+
+        function undoEditTask(className, index) {
+            // make form invisible
+            document.getElementById('task-list-editing').style.display = 'none';
+            document.getElementById('task-list').style.display = '';
+            document.getElementById('deadline-add-button').style.display = '';
+            document.getElementById('deadline-edit-button').style.display = '';
+            document.getElementById('deadline-delete-button').style.display = '';
+        }
+
         function deleteTask(className, index) {
-            classData[className].tasks.splice(index, 1);
-            localStorage.setItem('classData', JSON.stringify(classData));
-            loadTasks(className);
+            let tasks = document.getElementsByClassName("delete-deadline")
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = ""
+            }
+
+            document.getElementById('deadline-add-button').style.display = 'none';
+            document.getElementById('deadline-edit-button').style.display = 'none';
+            document.getElementById('deadline-delete-button').style.display = 'none';
+            document.getElementById('deadline-undo-delete-button').style.display = '';
+
+        }
+
+        function undoDeleteTask(className, index) {
+            let tasks = document.getElementsByClassName("delete-deadline")
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = "none"
+            }
+
+            document.getElementById('deadline-add-button').style.display = '';
+            document.getElementById('deadline-edit-button').style.display = '';
+            document.getElementById('deadline-delete-button').style.display = '';
+            document.getElementById('deadline-undo-delete-button').style.display = 'none';
+
         }
 
         // study sessions

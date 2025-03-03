@@ -231,6 +231,21 @@ def edit_deadlines():
     # reload dashboard
     return redirect(url_for("show_dashboard"))
 
+# delete deadline 
+@app.route("/delete-deadline", methods=['POST'])
+def delete_deadline():
+    # delete deadline from mongo
+    database.delete_deadline(myDb, session["userid"], request.form["deadline-id"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
+
+# delete class 
+@app.route("/delete-class", methods=['POST'])
+def delete_class():
+    # delete class from mongo
+    database.delete_class(myDb, session["userid"], request.form["classid"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
 
 # keep alive
 if __name__ == "__main__":

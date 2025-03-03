@@ -115,8 +115,16 @@ button {
     transition: 0.3s;
 }
 
+.delete {
+    background: #730e1b; 
+}
+
 button:hover {
     background: palevioletred;
+}
+
+.delete:hover {
+
 }
 
 /* profile.html*/
