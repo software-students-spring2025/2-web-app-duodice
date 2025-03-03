@@ -51,14 +51,10 @@ data = {
                         <h3>{{class.name}}</h3>  
                         <button onclick="manageClass('{{class._id}}', '{{class.name}}')" id="manage-class-{{class._id}}">Manage Class</button> 
                     </li>
-                
-                    
-                
-                
                 {% endfor %}
             </ul>
 
-            <form id="addClassForm" method="post" action="/add-class" style="display:none">
+            <form id="addClassForm" method="post" action="/add-class" >
                 <h2>Add New Class:</h2>
 
                 <label for="new-class">Class Name:</label>
@@ -69,20 +65,48 @@ data = {
             
         </section>
 
-          <!-- Task and session management -->
+        <!-- Task and session management -->
         <section id="task-session-container" style="display:none;">
-            <h2 id="class-name-header"></h2>
+            <h2 id="class-name-header">Manage Deadlines and ...</h2>
 
             <div id="tasks">
-                <h3>Tasks</h3>
+                <h3>Deadlines</h3>
                 <ul id="task-list">
-                    
+                    {% for deadline in data["deadlines"] %}
+                        <li>{{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
+                            ({{deadline.type}}) 
+                    {% endfor %}
                 </ul>
-                <input type="text" id="new-task" placeholder="New task">
-                <input type="date" id="task-date">
-                <button onclick="addTask()">Add Task</button>
-                <button onclick="editTask()">Edit Task</button>
-                <button onclick="deleteTask()">Delete Task</button>
+                <button onclick="addTask()" id="deadline-add-button">Add Deadline</button>
+                <button onclick="editTask()" id="deadline-edit-button">Edit Deadlines</button>
+                <button onclick="editTask()" id="deadline-delete-button">Delete Deadlines</button>
+
+                <div id="new-deadline" style="display: none;">
+                    <h2>New Deadline</h2>
+                    <form method="post" action="/add-deadline">
+                        <p>Title:   <input name="name" type="text" id="new-task" placeholder="Title" required></p>
+                        
+                        <p>Due Date:   <input name="due-date" type="date" id="task-date" required></p>
+                        
+                        <p>Deadline Type:</p>
+                        <input type="radio" id="type-assignment" name="type" value="Assignment" required>
+                        <label for="type-assignment">Assignment</label><br>
+                        <input type="radio" id="type-exam" name="type" value="Exam" required>
+                        <label for="type-exam">Exam</label><br>
+                        <input type="radio" id="type-project" name="type" value="Project" required>
+                        <label for="type-project">Project</label>
+                        <input type="radio" id="type-other" name="type" value="Other" required>
+                        <label for="type-other">Other</label>
+
+                        <input id="hidden-class-id-input" type="text" name="classid" style="display: none;" value="">
+                        <p></p>
+                        <button type="submit" value="Confirm Add">Confirm Add</button>
+                        <button type="button" onclick="undoAddTask()" id="cancel-deadline-add">Cancel</button>
+                    </form>
+                </div>
+                
+                
+                
             </div>
 
             <div id="study-sessions">
@@ -127,55 +151,39 @@ data = {
         /*
         This function is called when the "manage class" button for any class is pressed. 
 
-        The function will take in the id of the class being manipulated
+        The function will take in the id and name of the class being manipulated
 
         */
         function manageClass(this_class_id, this_class_name) {
+            let children = document.getElementById("task-list")
+            document.getElementById('class-name-header').innerText = `Manage Deadlines and Study Sessions for ${this_class_name}`
             // hiding the class list and showing the task/session container       
-            document.getElementById('class-name-header').innerText = `Manage Tasks and Study Sessions for ${this_class_name}`
-
             document.getElementById('class-list').style.display = 'none';
             document.getElementById('task-session-container').style.display = 'block';
+            document.getElementById('addClassForm').style.display = 'none'
+
+            document.getElementById('hidden-class-id-input').value = this_class_id
             
             // loading the tasks
             //document.getElementById('task-list').innerHTML = '';
-            console.log('beep')
             console.log(document.getElementById('task-list').innerHTML)
-            /*
-            classData[className].tasks.forEach(task => {
-                let li = document.createElement('li');
-                li.innerText = task;
-                document.getElementById('task-list').appendChild(li);
-            });
-
-            document.getElementById('study-session-list').innerHTML = '';
-            classData[className].sessions.forEach(session => {
-                let li = document.createElement('li');
-                li.innerText = session;
-                document.getElementById('study-session-list').appendChild(li);
-            });*/
+            
         }
 
         function addTask() {
-            let taskName = document.getElementById('new-task').value;
-            let taskDate = document.getElementById('task-date').value;
-            let className = document.getElementById('class-name-header').innerText.replace('Manage Tasks and Study Sessions for ', '');
-            
-            if (taskName.trim() === '' || taskDate.trim() === '') return;
+            // make form visible
+            document.getElementById('new-deadline').style.display = 'block';
+            document.getElementById('deadline-add-button').style.display = 'none';
+            document.getElementById('deadline-edit-button').style.display = 'none';
+            document.getElementById('deadline-delete-button').style.display = 'none';
+        }
 
-            // going to local storage
-            let task = `${taskName} - Date: ${taskDate}`;
-            classData[className].tasks.push(task);
-            localStorage.setItem('classData', JSON.stringify(classData));
-
-            // add task to list
-            let li = document.createElement('li');
-            li.innerText = task;
-            document.getElementById('task-list').appendChild(li);
-
-
-            document.getElementById('new-task').value = '';
-            document.getElementById('task-date').value = '';
+        function undoAddTask() {
+            // make form visible
+            document.getElementById('new-deadline').style.display = 'none';
+            document.getElementById('deadline-add-button').style.display = '';
+            document.getElementById('deadline-edit-button').style.display = '';
+            document.getElementById('deadline-delete-button').style.display = '';
         }
 
         function editTask(className, index) {
@@ -201,6 +209,7 @@ data = {
         function backToClasses() {
             document.getElementById('task-session-container').style.display = 'none';
             document.getElementById('class-list').style.display = 'block';
+            document.getElementById('addClassForm').style.display = 'block'
         }
     </script>
 </body>
