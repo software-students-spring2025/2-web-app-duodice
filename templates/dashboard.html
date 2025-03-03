@@ -73,8 +73,9 @@ data = {
                 <h3>Deadlines</h3>
                 <ul id="task-list">
                     {% for deadline in data["deadlines"] %}
-                        <li>{{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
-                            ({{deadline.type}}) 
+                        <li style="display: none" class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
+                            {{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
+                            ({{deadline.type}}) </li>
                     {% endfor %}
                 </ul>
                 <button onclick="addTask()" id="deadline-add-button">Add Deadline</button>
@@ -155,7 +156,7 @@ data = {
 
         */
         function manageClass(this_class_id, this_class_name) {
-            let children = document.getElementById("task-list")
+            
             document.getElementById('class-name-header').innerText = `Manage Deadlines and Study Sessions for ${this_class_name}`
             // hiding the class list and showing the task/session container       
             document.getElementById('class-list').style.display = 'none';
@@ -163,7 +164,11 @@ data = {
             document.getElementById('addClassForm').style.display = 'none'
 
             document.getElementById('hidden-class-id-input').value = this_class_id
-            
+
+            let tasks = document.getElementsByClassName(this_class_name)
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = ""
+            }
             // loading the tasks
             //document.getElementById('task-list').innerHTML = '';
             console.log(document.getElementById('task-list').innerHTML)
@@ -210,6 +215,10 @@ data = {
             document.getElementById('task-session-container').style.display = 'none';
             document.getElementById('class-list').style.display = 'block';
             document.getElementById('addClassForm').style.display = 'block'
+            let tasks = document.getElementsByClassName("gen-task")
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = "none"
+            }
         }
     </script>
 </body>
