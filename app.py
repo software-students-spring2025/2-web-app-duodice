@@ -30,7 +30,7 @@ app = Flask(__name__, static_folder='assets')
 
 # start new user session
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "mongodb"
+app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 
@@ -42,11 +42,12 @@ def show_dashboard():
     # if we are NOT logged in - redirect to login
     if 'userid' not in session or session['userid'] is None:
         return redirect(url_for('show_login'))
-
+    print(session)
+    print(session['userid'])
     # if we are logged in (session["userid"] is not None) - load the dashboard page
     # show the dashboard
     if request.method == "GET":   
-
+        
         if 'userid' in session and session['userid'] is not None:
             data = {
                 "user": database.get_user_info(myDb, ObjectId(session['userid'])),
@@ -198,29 +199,53 @@ def edit_profile():
 # add class
 @app.route("/add-class", methods=["POST"])
 def add_class():
-    
     # add class details to mongodb
-    class_id = database.add_class(session["userid"], request.form["classname"])
-
-    # add deadlines to mongodb 
-    num = 1
-    while True:
-        if "deadline-" + str(num) + "-name" not in request.form:
-            break 
-
-        database.add_deadline(
-            session["userid"], 
-            class_id, 
-            request.form["deadline-" + str(num) + "-name"], 
-            request.form["deadline-" + str(num) + "-type"], 
-            request.form["deadline-" + str(num) + "-due-date"]
-        )
-
-        num += 1
-    
+    database.add_class(myDb, session["userid"], request.form["classname"])
     # reload dashboard
-    return redirect(url_for("/"))
+    return redirect(url_for("show_dashboard"))
 
+
+# add deadline 
+@app.route("/add-deadline", methods=['POST'])
+def add_deadline():
+    # add deadline details to mongodb
+    database.add_deadlines(myDb, session["userid"], request.form["classid"], request.form["due-date"], request.form["name"], request.form["type"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
+
+# edit deadlines
+@app.route("/edit-deadlines", methods=['POST'])
+def edit_deadlines():
+    # get all deadlines 
+    dlines = database.get_deadlines(myDb, ObjectId(session["userid"]))
+
+    # iterate through them
+    for d in dlines:
+        did = str(d["_id"])
+        if request.form[did + "-name"] != d["name"] or request.form[did + "-due-date"] != d["due_date"] or request.form[did + "-type"] != d["type"]:
+            database.edit_deadline(myDb, did, request.form[did + "-name"], request.form[did + "-due-date"], request.form[did + "-type"])
+            
+
+    # add deadline details to mongodb
+    #database.add_deadlines(myDb, session["userid"], request.form["classid"], request.form["due-date"], request.form["name"], request.form["type"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
+
+# delete deadline 
+@app.route("/delete-deadline", methods=['POST'])
+def delete_deadline():
+    # delete deadline from mongo
+    database.delete_deadline(myDb, session["userid"], request.form["deadline-id"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
+
+# delete class 
+@app.route("/delete-class", methods=['POST'])
+def delete_class():
+    # delete class from mongo
+    database.delete_class(myDb, session["userid"], request.form["classid"])
+    # reload dashboard
+    return redirect(url_for("show_dashboard"))
 
 # keep alive
 if __name__ == "__main__":

@@ -51,14 +51,10 @@ data = {
                         <h3>{{class.name}}</h3>  
                         <button onclick="manageClass('{{class._id}}', '{{class.name}}')" id="manage-class-{{class._id}}">Manage Class</button> 
                     </li>
-                
-                    
-                
-                
                 {% endfor %}
             </ul>
 
-            <form id="addClassForm" method="post" action="/add-class" style="display:none">
+            <form id="addClassForm" method="post" action="/add-class" >
                 <h2>Add New Class:</h2>
 
                 <label for="new-class">Class Name:</label>
@@ -69,20 +65,94 @@ data = {
             
         </section>
 
-          <!-- Task and session management -->
+        <!-- Task and session management -->
         <section id="task-session-container" style="display:none;">
-            <h2 id="class-name-header"></h2>
+            <h2 id="class-name-header">Manage Deadlines and ...</h2>
 
             <div id="tasks">
-                <h3>Tasks</h3>
+                <h3>Deadlines</h3>
                 <ul id="task-list">
-                    
+                    {% for deadline in data["deadlines"] %}
+                    <div style="display: none" class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
+
+                        <li>
+                            {{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
+                            ({{deadline.type}}) 
+                        </li> 
+                        <form style="display: none;" method="post" action="/delete-deadline" class="delete-deadline">
+                            <input style="display:none" type="text" value="{{deadline._id}}" name="deadline-id">
+                            <button class="delete" type="submit">Delete Deadline</button> 
+                        </form>
+
+                    </div>
+                    {% endfor %}
                 </ul>
-                <input type="text" id="new-task" placeholder="New task">
-                <input type="date" id="task-date">
-                <button onclick="addTask()">Add Task</button>
-                <button onclick="editTask()">Edit Task</button>
-                <button onclick="deleteTask()">Delete Task</button>
+
+
+                <form method="post" action="/edit-deadlines" style="display:none;" id="task-list-editing"><ul>
+
+                    {% for deadline in data["deadlines"] %}
+                        <li style="display: none"  class="gen-task {% for class in data['classes'] if class['_id'] == deadline['class_ID'] %}{{class['name']}}{% endfor %}">
+                            <input type="text" value="{{deadline.name}}" name="{{deadline._id}}-name" required>
+                            <input type="date" value="{{deadline.due_date}}" name="{{deadline._id}}-due-date" required>
+                            <select name="{{deadline._id}}-type" id="" value="{{deadline.type}}">
+                                {% if deadline.type == "Assignment" %}
+                                <option value="Assignment" selected>Assignment</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Project">Project</option>
+                                <option value="Other">Other</option>
+                                {% elif deadline.type == "Exam" %}
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam" selected>Exam</option>
+                                <option value="Project">Project</option>
+                                <option value="Other">Other</option>
+                                {% elif deadline.type == "Project" %}
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Project" selected>Project</option>
+                                <option value="Other">Other</option>
+                                {% else %}
+                                <option value="Assignment">Assignment</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Project">Project</option>
+                                <option value="Other" selected>Other</option>
+                                {% endif %}
+                              </select>
+                            </li>
+                    {% endfor %}
+                    <button type="submit" >Submit Changes</button>
+                    <button type="button" onclick="undoEditTask()">Cancel Changes</button>
+                </ul></form>
+                <button onclick="addTask()" id="deadline-add-button">Add Deadline</button>
+                <button onclick="editTask()" id="deadline-edit-button">Edit Deadlines</button>
+                <button onclick="deleteTask()" id="deadline-delete-button">Delete Deadline</button>
+                <button onclick="undoDeleteTask()" id="deadline-undo-delete-button" style="display: none;">Cancel Delete</button>
+
+                <div id="new-deadline" style="display: none;">
+                    <h2>New Deadline</h2>
+                    <form method="post" action="/add-deadline">
+                        <p>Title:   <input name="name" type="text" id="new-task" placeholder="Title" required></p>
+                        
+                        <p>Due Date:   <input name="due-date" type="date" id="task-date" required></p>
+                        
+                        <p>Deadline Type:</p>
+                        <input type="radio" id="type-assignment" name="type" value="Assignment" required>
+                        <label for="type-assignment">Assignment</label><br>
+                        <input type="radio" id="type-exam" name="type" value="Exam" required>
+                        <label for="type-exam">Exam</label><br>
+                        <input type="radio" id="type-project" name="type" value="Project" required>
+                        <label for="type-project">Project</label>
+                        <input type="radio" id="type-other" name="type" value="Other" required>
+                        <label for="type-other">Other</label>
+
+                        <p></p>
+                        <button type="submit" value="Confirm Add">Confirm Add</button>
+                        <button type="button" onclick="undoAddTask()" id="cancel-deadline-add">Cancel</button>
+                    </form>
+                </div>
+                
+                
+                
             </div>
 
             <div id="study-sessions">
@@ -90,12 +160,18 @@ data = {
                 <ul id="study-session-time">
                     <p>Total time studied: </p>
                 </ul>
-            
-                <button onclick="startStudySession()">Start Study Session</button>
+                <form method="get" action="/study">
+                    <button type="submit">Start Study Session</button>
+                </form>
+                
             </div>
 
             <div>
-                <button onclick="deleteClass()">Delete Class</button>
+                <form method="post" action="delete-class" >
+                    <input type="text" style="display:none;" name="classid" value="" id="delete-class-input">
+                    <button type="submit">Delete Class</button>
+                </form>
+                
             </div>
             <button onclick="backToClasses()">Back to Classes</button>
         </section>
@@ -112,84 +188,90 @@ data = {
         
 
         function deleteClass() {
-            let className = document.getElementById('class-name-header').innerText.replace('Manage Tasks and Study Sessions for ', '');
             
-            // removing the class totally
-            delete classData[className];
-            localStorage.setItem('classData', JSON.stringify(classData));
-
-            // removing class from class list
-            loadClasses();
-
-            backToClasses();
         }
 
         /*
         This function is called when the "manage class" button for any class is pressed. 
 
-        The function will take in the id of the class being manipulated
+        The function will take in the id and name of the class being manipulated
 
         */
         function manageClass(this_class_id, this_class_name) {
+            
+            document.getElementById('class-name-header').innerText = `Manage Deadlines and Study Sessions for ${this_class_name}`
             // hiding the class list and showing the task/session container       
-            document.getElementById('class-name-header').innerText = `Manage Tasks and Study Sessions for ${this_class_name}`
-
             document.getElementById('class-list').style.display = 'none';
             document.getElementById('task-session-container').style.display = 'block';
-            
-            // loading the tasks
-            //document.getElementById('task-list').innerHTML = '';
-            console.log('beep')
-            console.log(document.getElementById('task-list').innerHTML)
-            /*
-            classData[className].tasks.forEach(task => {
-                let li = document.createElement('li');
-                li.innerText = task;
-                document.getElementById('task-list').appendChild(li);
-            });
+            document.getElementById('addClassForm').style.display = 'none'
 
-            document.getElementById('study-session-list').innerHTML = '';
-            classData[className].sessions.forEach(session => {
-                let li = document.createElement('li');
-                li.innerText = session;
-                document.getElementById('study-session-list').appendChild(li);
-            });*/
+            let tasks = document.getElementsByClassName(this_class_name)
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = ""
+            }
+            
+            document.getElementById("delete-class-input").setAttribute('value', this_class_id)
+            
         }
 
         function addTask() {
-            let taskName = document.getElementById('new-task').value;
-            let taskDate = document.getElementById('task-date').value;
-            let className = document.getElementById('class-name-header').innerText.replace('Manage Tasks and Study Sessions for ', '');
-            
-            if (taskName.trim() === '' || taskDate.trim() === '') return;
+            // make form visible
+            document.getElementById('new-deadline').style.display = 'block';
+            document.getElementById('deadline-add-button').style.display = 'none';
+            document.getElementById('deadline-edit-button').style.display = 'none';
+            document.getElementById('deadline-delete-button').style.display = 'none';
+        }
 
-            // going to local storage
-            let task = `${taskName} - Date: ${taskDate}`;
-            classData[className].tasks.push(task);
-            localStorage.setItem('classData', JSON.stringify(classData));
-
-            // add task to list
-            let li = document.createElement('li');
-            li.innerText = task;
-            document.getElementById('task-list').appendChild(li);
-
-
-            document.getElementById('new-task').value = '';
-            document.getElementById('task-date').value = '';
+        function undoAddTask() {
+            // make form invisible
+            document.getElementById('new-deadline').style.display = 'none';
+            document.getElementById('deadline-add-button').style.display = '';
+            document.getElementById('deadline-edit-button').style.display = '';
+            document.getElementById('deadline-delete-button').style.display = '';
         }
 
         function editTask(className, index) {
-            let newTask = prompt("Edit your task:", classData[className].tasks[index]);
-            if (newTask) {
-                classData[className].tasks[index] = newTask;
-                localStorage.setItem('classData', JSON.stringify(classData));
-                loadTasks(className);
-            }
+            // make form visible
+            document.getElementById('task-list-editing').style.display = '';
+            document.getElementById('task-list').style.display = 'none';
+            document.getElementById('deadline-add-button').style.display = 'none';
+            document.getElementById('deadline-edit-button').style.display = 'none';
+            document.getElementById('deadline-delete-button').style.display = 'none';
         }
+
+        function undoEditTask(className, index) {
+            // make form invisible
+            document.getElementById('task-list-editing').style.display = 'none';
+            document.getElementById('task-list').style.display = '';
+            document.getElementById('deadline-add-button').style.display = '';
+            document.getElementById('deadline-edit-button').style.display = '';
+            document.getElementById('deadline-delete-button').style.display = '';
+        }
+
         function deleteTask(className, index) {
-            classData[className].tasks.splice(index, 1);
-            localStorage.setItem('classData', JSON.stringify(classData));
-            loadTasks(className);
+            let tasks = document.getElementsByClassName("delete-deadline")
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = ""
+            }
+
+            document.getElementById('deadline-add-button').style.display = 'none';
+            document.getElementById('deadline-edit-button').style.display = 'none';
+            document.getElementById('deadline-delete-button').style.display = 'none';
+            document.getElementById('deadline-undo-delete-button').style.display = '';
+
+        }
+
+        function undoDeleteTask(className, index) {
+            let tasks = document.getElementsByClassName("delete-deadline")
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = "none"
+            }
+
+            document.getElementById('deadline-add-button').style.display = '';
+            document.getElementById('deadline-edit-button').style.display = '';
+            document.getElementById('deadline-delete-button').style.display = '';
+            document.getElementById('deadline-undo-delete-button').style.display = 'none';
+
         }
 
         // study sessions
@@ -201,6 +283,11 @@ data = {
         function backToClasses() {
             document.getElementById('task-session-container').style.display = 'none';
             document.getElementById('class-list').style.display = 'block';
+            document.getElementById('addClassForm').style.display = 'block'
+            let tasks = document.getElementsByClassName("gen-task")
+            for(let i = 0; i < tasks.length; i++) {
+                tasks[i].style.display = "none"
+            }
         }
     </script>
 </body>
