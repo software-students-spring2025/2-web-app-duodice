@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 #import os
 #from dotenv import load_dotenv
 #from bson.objectid import ObjectId
+
 '''
 notes / instructions
 
@@ -21,7 +22,13 @@ uri = os.getenv("MONGO_URI")
 client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
 Mongo_DBNAME= os.getenv("MONGO_DBNAME")
 myDb= client[Mongo_DBNAME]
+print("Hello World 2")
 
+
+user = database.edit_study(myDb, "67bb780f0d9f7692fdfa4215","67bd3a98a1126f05a1aa8645",goals="study science")
+print(user)
+#for doc in user:
+#    print(doc)
 # start app
 app = Flask(__name__)
 
