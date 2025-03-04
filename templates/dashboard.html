@@ -144,7 +144,7 @@ data = {
                         <label for="type-project">Project</label>
                         <input type="radio" id="type-other" name="type" value="Other" required>
                         <label for="type-other">Other</label>
-
+                        <input id="hidden-class-id-input" type="text" name="classid" style="display: none;" value="">
                         <p></p>
                         <button type="submit" value="Confirm Add">Confirm Add</button>
                         <button type="button" onclick="undoAddTask()" id="cancel-deadline-add">Cancel</button>
@@ -209,7 +209,7 @@ data = {
             for(let i = 0; i < tasks.length; i++) {
                 tasks[i].style.display = ""
             }
-            
+            document.getElementById('hidden-class-id-input').setAttribute("value", this_class_id)
             document.getElementById("delete-class-input").setAttribute('value', this_class_id)
             
         }
