@@ -32,24 +32,23 @@ def search_similar_deadline(mydb, userID, name):
 
 # get all deadlines from a user in which the type is equal to the input
 #
-def search_exact_deadline(mydb, userID, name):
+def search_exact_deadline(mydb, userID, dtype):
     usertable = mydb["Deadline"]
 
     my_deadlines = usertable.find({
         "user_ID" : ObjectId(userID),
-        "name": name
+        "type": dtype
     })
 
     return list(my_deadlines)
 
 
 # get all deadlines from a user sorted by title alphabetical 
-def search_sort_alpha_deadline(mydb, userID, name):
+def search_sort_alpha_deadline(mydb, userID):
     usertable = mydb["Deadline"]
 
     my_deadlines = usertable.find({
-        "user_ID" : ObjectId(userID),
-        "name": {"$regex": name, "$options": "i"}
+        "user_ID" : ObjectId(userID)
     })
 
     my_deadlines.sort("name", 1)
@@ -59,12 +58,11 @@ def search_sort_alpha_deadline(mydb, userID, name):
 
 
 # get all deadlines from a user sorted by due date
-def search_sort_date_deadline(mydb, userID, name):
+def search_sort_date_deadline(mydb, userID):
     usertable = mydb["Deadline"]
 
     my_deadlines = usertable.find({
-        "user_ID" : ObjectId(userID),
-        "name": {"$regex": name, "$options": "i"}
+        "user_ID" : ObjectId(userID)
     }).sort("due_date", 1)
 
     return list(my_deadlines)
@@ -72,12 +70,11 @@ def search_sort_date_deadline(mydb, userID, name):
 
 
 # get all deadlines from a user sorted by type
-def search_sort_type_deadline(mydb, userID, name):
+def search_sort_type_deadline(mydb, userID):
     usertable = mydb["Deadline"]
 
     my_deadlines = usertable.find({
-        "user_ID" : ObjectId(userID),
-        "name": {"$regex": name, "$options": "i"}
+        "user_ID" : ObjectId(userID)
     })
 
     my_deadlines.sort("type", 1)
@@ -87,12 +84,11 @@ def search_sort_type_deadline(mydb, userID, name):
 
 
 # get all deadlines from a user sorted by classname
-def search_sort_class_deadline(mydb, userID, name):
+def search_sort_class_deadline(mydb, userID):
     usertable = mydb["Deadline"]
 
     my_deadlines = usertable.find({
-        "user_ID" : ObjectId(userID),
-        "name": {"$regex": name, "$options": "i"}
+        "user_ID" : ObjectId(userID)
     })
 
     my_deadlines.sort("class_ID", 1)
