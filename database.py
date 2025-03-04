@@ -154,7 +154,7 @@ def add_class(mydb, userID, name):
         doc = {
             "user_ID" : ObjectId(userID),
             "name" : name,
-            "time_studied_hours" : 0
+            "time_studied_mins" : 0
         }
 
         usertable.insert_one(doc) # Creation of the class will assign it a unique ID and if needed can be equated to a variable
