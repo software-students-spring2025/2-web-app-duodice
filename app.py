@@ -183,16 +183,9 @@ def edit_profile():
     name = request.form['name']
     age = request.form['age']
     bio = request.form['bio']
-    print("profile edited in backend")
-    data = {
-        "user": {
-            "userID": "",
-            "name": name,
-            "age": age,
-            "username": "John", 
-            "bio": bio
-        }
-    }
+
+    database.edit_profile(myDb, session['userid'], name, age, bio)
+    
     return redirect(url_for('show_profile'))
 
 
