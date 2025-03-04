@@ -9,6 +9,7 @@ import certifi
 from dotenv import load_dotenv
 from flask_session import Session
 
+
 '''
 notes / instructions
 
@@ -25,7 +26,6 @@ client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
 Mongo_DBNAME= os.getenv("MONGO_DBNAME")
 myDb= client[Mongo_DBNAME]
 
-# start app
 app = Flask(__name__, static_folder='assets')
 
 # start new user session
