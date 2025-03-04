@@ -20,22 +20,38 @@
     </header>
     <div class="container">
         <h1>Study Session</h1>
-        
-        <div class="timer-section">
-            <label for="study-time">Set Study Time (minutes):</label>
-            <input type="number" id="study-time" min="1" value="25">
-            <button id="start-timer">Start Session</button>
-            <button id="pause-timer">Pause Timer</button>
-            <button id="reset-timer">Reset Timer</button>
-            <h2 id="countdown">00:00</h2>
-        </div>
-        
-        <div class="goals-section">
-            <h2>Session Goals</h2>
-            <input type="text" id="goal-input" placeholder="Enter a goal">
-            <button id="add-goal">Add Goal</button>
-            <ul id="goals-list"></ul>
-        </div>
+        <form method="post" action="/add-study-session">
+
+            <label id="select-class">What class are you studying for?</label>
+            <select name="class" id="select-class" required>
+                <option value="">--Select class</option>
+                {% for class in data["classes"] %}
+                <option value="{{class._id}}">{{class.name}}</option>
+                {% endfor %}
+            </select>
+            <div class="timer-section">
+                <label for="study-time">Set Study Time (minutes):</label>
+                <input name="intended-time" type="number" id="study-time" min="1" value="25">
+                <button type="button" id="start-timer">Start Session</button>
+                <button type="button" id="pause-timer">Pause Timer</button>
+                <button type="button" id="reset-timer">Reset Timer</button>
+                <h2 id="countdown">00:00</h2>
+            </div>
+            
+            <div class="goals-section">
+                <h2>Session Goals</h2>
+                <input type="text" id="goal-input" placeholder="Enter a goal">
+                <button type="button" id="add-goal">Add Goal</button>
+                <ul id="goals-list"></ul>
+
+
+                <!-- hidden elements for backend-->
+                <input style="display: none;" value="0" name="goal-total" id="goal-total-counter">
+                <input style="display: none;" value="0" name="mins-left" id="mins-left-counter">
+            </div>
+
+            <button type="submit">Complete and Log Study Session</button>
+        </form>
     </div>
     
     <script>
@@ -68,6 +84,7 @@
                 let minutes = Math.floor(timeLeft / 60);
                 let seconds = timeLeft % 60;
                 document.getElementById('countdown').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                document.getElementById('mins-left-counter').setAttribute("value", minutes)
                 if (timeLeft > 0) {
                     timeLeft--;
                 } else {
@@ -76,6 +93,52 @@
                 }
             }, 1000);
         }
+
+        // adding goals
+        document.getElementById('add-goal').addEventListener('click', function() {
+            
+            let goalInput = document.getElementById('goal-input');
+            let goalText = goalInput.value.trim();
+            
+            if (goalText === '') {
+                alert('Please enter a goal.');
+                return;
+            }
+            let goalList = document.getElementById('goals-list');
+            chil = goalList.children
+            num = chil.length+1
+            
+            let listItem = document.createElement('li');
+            listItem.innerHTML = `
+                
+                <input type="checkbox" class="goal-checkbox" name="goal-${num}-check" value="on"}> 
+                <span class="goal-text">${goalText}</span>
+                <input type="hidden" name="goal-${num}-check" value="off">
+                <input type="hidden" name="goal-${num}" value="${goalText}">
+                <button class="delete-goal">delete</button>
+            `;
+            goalList.appendChild(listItem);
+            goalInput.value = '';
+            document.getElementById("goal-total-counter").setAttribute("value", num)
+        });
+        
+        document.getElementById('goals-list').addEventListener('click', function(event) {
+            if (event.target.classList.contains('goal-checkbox')) {
+                let goalText = event.target.nextElementSibling;
+                if (event.target.checked) {
+                    goalText.style.textDecoration = 'line-through';
+                    goalText.style.color = 'gray';
+                } else {
+                    goalText.style.textDecoration = 'none';
+                    goalText.style.color = 'black';
+                }
+            }
+            
+            if (event.target.classList.contains('delete-goal')) {
+                event.target.parentElement.remove();
+            }
+        });
+        
     </script>
 </body>
 <footer>
