@@ -35,7 +35,70 @@ data = {
         <section id="deadlines">
             <h2>Upcoming Deadlines</h2>
             <ul id="deadline-list">
-                {% for deadline in data["deadlines"] %}
+                <form method="get" action="/" id="deadlines-filter">
+                    <input type="text" placeholder="Search by title" name="title" value="{{data['params'].title}}">
+                    <label for="type-filter" >Type: </label>
+                    <select name="type" id="type-filter" >
+                        {% if data["params"].type == "Assignment" %}
+                        <option value="">--None chosen</option>
+                        <option value="Assignment" selected>Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project">Project</option>
+                        <option value="Other">Other</option>
+                        {% elif data["params"].type == "Exam" %}
+                        <option value="">--None chosen</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam" selected>Exam</option>
+                        <option value="Project">Project</option>
+                        <option value="Other">Other</option>
+                        {% elif data["params"].type == "Project" %}
+                        <option value="">--None chosen</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project" selected>Project</option>
+                        <option value="Other">Other</option>
+                        {% elif data["params"].type == "Other" %}
+                        <option value="">--None chosen</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project">Project</option>
+                        <option value="Other" selected>Other</option>
+                        {% else %}
+                        <option value="">--None chosen</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Project">Project</option>
+                        <option value="Other">Other</option>
+                        {% endif %}
+                    </select>
+                    <label for="sort-by" >Sort by: </label>
+                    <select name="sort-by" id="sort-by" >
+                        {% if data["params"]['sort-by'] == 'name' %}
+                        <option value="">--None chosen</option>
+                        <option value="name" selected>Title</option>
+                        <option value="due_date">Due Date</option>
+                        <option value="type">Type</option>
+                        {% elif data["params"]['sort-by'] == "due-date" %}
+                        <option value="">--None chosen</option>
+                        <option valuedata="name">Title</option>
+                        <option value="due_date" selected>Due Date</option>
+                        <option value="type">Type</option>
+                        {% elif data["params"]['sort-by'] == "type" %}
+                        <option value="">--None chosen</option>
+                        <option value="name">Title</option>
+                        <option value="due_date">Due Date</option>
+                        <option value="type" selected>Type</option>
+                        {% else %}
+                        <option value="">--None chosen</option>
+                        <option value="name">Title</option>
+                        <option value="due_date">Due Date</option>
+                        <option value="type">Type</option>
+                        {% endif %}
+                        
+                    </select>
+                    <button type="submit" >Filter</button>
+                </form>
+                {% for deadline in data["filtered"] %}
                     <li>{{deadline.name}} - <strong>{{deadline.due_date}}</strong> <br>
                         ({{deadline.type}})
                         (class: {% for class in data["classes"] if class["_id"] == deadline["class_ID"] %}{{class["name"]}}{% endfor %})</li>
