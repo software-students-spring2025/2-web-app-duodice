@@ -419,7 +419,16 @@ def delete_class(mydb, userID, classID):
 ## Function: edit user info
 ## Usage: edit user info in user table according to specifications
 ## 
-def edit_profile(mydb, userID, password, bio, pic, dark_mode):
+def edit_profile(mydb, userID, name, age, bio):
+    usetable = mydb["users"]
+    updates= {}
+    updates["name"]= name
+    updates["age"]= age 
+    updates["bio"]= bio  
+    result = usetable.update_one(
+          {"_id": ObjectId(userID)},  
+            {"$set": updates} if "$push" not in updates else updates 
+     )
     return None
 
 
@@ -428,19 +437,14 @@ def edit_study(mydb,userID,studyID,date=None,goals=None,duration_hours=None):
     usetable= mydb["Studies"]
     user=  usetable.find_one({"user_id":ObjectId(userID),"_id":ObjectId(studyID)})
     if not user:
-        print("no user")
         return None 
     updates= {}
     if date is not None:
-        print("date update")
         updates["date"]= date 
     if goals is not None:
-        print("print goal update")
         updates["$push"] = {"goals_completed": goals}
     if duration_hours is not None:
-        print("time update")
         updates["duration_hours"] = duration_hours
-    print("update")
     result = usetable.update_one(
           {"_id": ObjectId(studyID), "user_id": ObjectId(userID)},  
             {"$set": updates} if "$push" not in updates else updates 
