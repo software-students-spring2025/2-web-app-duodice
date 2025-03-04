@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Study Tracker</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <header>
@@ -13,6 +13,7 @@
             <ul>
                 <li><a href="{{ url_for('show_dashboard') }}">Dashboard</a></li>
                 <li><a href="{{ url_for('show_profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('show_study') }}">Study</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
         </nav>
@@ -35,7 +36,9 @@ data = {
             <h2>Upcoming Deadlines</h2>
             <ul id="deadline-list">
                 {% for deadline in data["deadlines"] %}
-                    <li>{{deadline.name}} - <strong>{{deadline.date}}</strong></li>
+                    <li>{{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
+                        ({{deadline.type}}) 
+                        (class: {% for class in data["classes"] if class["_id"] == deadline["class_ID"] %}{{class["name"]}}{% endfor %})</li>
                 {% endfor %}
             </ul>
         </section>
@@ -43,10 +46,27 @@ data = {
         <section id="classes">
             <h2>Your Classes</h2>
             <ul id="class-list">
-                 <!-- Dynamically generated class list -->
+                {% for class in data["classes"] %}
+                    <li>
+                        <h3>{{class.name}}</h3>  
+                        <button onclick="manageClass('{{class._id}}', '{{class.name}}')" id="manage-class-{{class._id}}">Manage Class</button> 
+                    </li>
+                
+                    
+                
+                
+                {% endfor %}
             </ul>
-            <input type="text" id="new-class" placeholder="Enter class name">
-            <button onclick="addClass()">Add Class</button>
+
+            <form id="addClassForm" method="post" action="/add-class" style="display:none">
+                <h2>Add New Class:</h2>
+
+                <label for="new-class">Class Name:</label>
+                <input name="classname" type="text" id="new-class" placeholder="Enter class name" required>
+                
+                <input type="submit">
+            </form>
+            
         </section>
 
           <!-- Task and session management -->
@@ -61,16 +81,17 @@ data = {
                 <input type="text" id="new-task" placeholder="New task">
                 <input type="date" id="task-date">
                 <button onclick="addTask()">Add Task</button>
+                <button onclick="editTask()">Edit Task</button>
+                <button onclick="deleteTask()">Delete Task</button>
             </div>
 
             <div id="study-sessions">
                 <h3>Study Sessions</h3>
-                <ul id="study-session-list">
-                    
+                <ul id="study-session-time">
+                    <p>Total time studied: </p>
                 </ul>
-                <input type="text" id="new-session" placeholder="New session">
-                <input type="date" id="session-date">
-                <button onclick="addSession()">Add Session</button>
+            
+                <button onclick="startStudySession()">Start Study Session</button>
             </div>
 
             <div>
@@ -84,35 +105,12 @@ data = {
         <p>&copy; 2025 Study Tracker</p>
     </footer>
     
+    
     <script>
 
-        let classData = JSON.parse(localStorage.getItem('classData')) || {};
-        window.onload = function() {
-            loadClasses();
-        };
-
-        function loadClasses() {
-            let classList = document.getElementById('class-list');
-            classList.innerHTML = '';
-            Object.keys(classData).forEach(className => {
-                let li = document.createElement('li');
-                li.innerHTML = `<span>${className}</span> <button onclick="manageClass('${className}')">Manage</button>`;
-                classList.appendChild(li);
-            });
-        }
-
-        function addClass() {
-            let className = document.getElementById('new-class').value;
-            if (className.trim() === '') return;
-
-            // adding class
-            classData[className] = { tasks: [], sessions: [] };
-            localStorage.setItem('classData', JSON.stringify(classData));
-
-            loadClasses(); // reload the class list
-            document.getElementById('new-class').value = '';
-        }
         
+        
+
         function deleteClass() {
             let className = document.getElementById('class-name-header').innerText.replace('Manage Tasks and Study Sessions for ', '');
             
@@ -126,14 +124,24 @@ data = {
             backToClasses();
         }
 
-        function manageClass(className) {
-            // hiding the class list and showing the task/session container
+        /*
+        This function is called when the "manage class" button for any class is pressed. 
+
+        The function will take in the id of the class being manipulated
+
+        */
+        function manageClass(this_class_id, this_class_name) {
+            // hiding the class list and showing the task/session container       
+            document.getElementById('class-name-header').innerText = `Manage Tasks and Study Sessions for ${this_class_name}`
+
             document.getElementById('class-list').style.display = 'none';
             document.getElementById('task-session-container').style.display = 'block';
-            document.getElementById('class-name-header').innerText = `Manage Tasks and Study Sessions for ${className}`;
-
+            
             // loading the tasks
-            document.getElementById('task-list').innerHTML = '';
+            //document.getElementById('task-list').innerHTML = '';
+            console.log('beep')
+            console.log(document.getElementById('task-list').innerHTML)
+            /*
             classData[className].tasks.forEach(task => {
                 let li = document.createElement('li');
                 li.innerText = task;
@@ -145,7 +153,7 @@ data = {
                 let li = document.createElement('li');
                 li.innerText = session;
                 document.getElementById('study-session-list').appendChild(li);
-            });
+            });*/
         }
 
         function addTask() {
@@ -170,24 +178,24 @@ data = {
             document.getElementById('task-date').value = '';
         }
 
-        function addSession() {
-            let sessionName = document.getElementById('new-session').value;
-            let sessionDate = document.getElementById('session-date').value;
-            let className = document.getElementById('class-name-header').innerText.replace('Manage Tasks and Study Sessions for ', '');
-            
-            if (sessionName.trim() === '' || sessionDate.trim() === '') return;
-
-            // add study sessions
-            let session = `${sessionName} - Date: ${sessionDate}`;
-            classData[className].sessions.push(session);
+        function editTask(className, index) {
+            let newTask = prompt("Edit your task:", classData[className].tasks[index]);
+            if (newTask) {
+                classData[className].tasks[index] = newTask;
+                localStorage.setItem('classData', JSON.stringify(classData));
+                loadTasks(className);
+            }
+        }
+        function deleteTask(className, index) {
+            classData[className].tasks.splice(index, 1);
             localStorage.setItem('classData', JSON.stringify(classData));
+            loadTasks(className);
+        }
 
-            let li = document.createElement('li');
-            li.innerText = session;
-            document.getElementById('study-session-list').appendChild(li);
+        // study sessions
 
-            document.getElementById('new-session').value = '';
-            document.getElementById('session-date').value = '';
+        function startStudySession() {
+            window.location.href = "study_session.html";
         }
 
         function backToClasses() {
