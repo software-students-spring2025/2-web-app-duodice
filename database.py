@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from bson.objectid import ObjectId
 #import datetime
 
-<<<<<<< HEAD
 #load_dotenv()
 #uri = os.getenv("MONGO_URI")
 #Mongo_DBNAME= os.getenv("MONGO_DBNAME")
@@ -27,9 +26,6 @@ from bson.objectid import ObjectId
 #List of data Tables
 #myTable= myDb["users"]
 #AssigmentsTable= myDb["Assigments"]
-=======
-
->>>>>>> refs/remotes/origin/MongoDataBase
 
 ######## USER AUTHENTICATION
 
@@ -273,12 +269,13 @@ def add_study_session(mydb, userID, classID, date, duration, goals):
 
 # Usage: adds a task for a specific class to the users profile. Front end needs to collect all the parameters that the function requires and call in the format MongoDB shows
 # Return: 0 if there was an error adding the new task or 1 if the process was completed without issues
-def add_tasks(mydb, userID, name):
+def add_tasks(mydb, userID, task, goals):
     usertable = mydb["Tasks"]
     
     exist = usertable.find_one({
         "user_ID" : ObjectId(userID),
-        "name" : name
+        "Task" : task,
+        "Goals": {"$all": goals}
     })
 
     if (exist):
@@ -288,7 +285,8 @@ def add_tasks(mydb, userID, name):
     else:
         doc = {
             "user_ID" : ObjectId(userID),
-            "name" : name,
+            "Task" : task,
+            "Goals": goals
         }
 
         usertable.insert_one(doc) # Creation of the Task will assign it a unique ID and if needed can be equated to a variable
