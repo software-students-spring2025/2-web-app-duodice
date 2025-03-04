@@ -36,8 +36,8 @@ data = {
             <h2>Upcoming Deadlines</h2>
             <ul id="deadline-list">
                 {% for deadline in data["deadlines"] %}
-                    <li>{{deadline.name}} - <strong>{{deadline.due_date}}</strong> 
-                        ({{deadline.type}}) 
+                    <li>{{deadline.name}} - <strong>{{deadline.due_date}}</strong> <br>
+                        ({{deadline.type}})
                         (class: {% for class in data["classes"] if class["_id"] == deadline["class_ID"] %}{{class["name"]}}{% endfor %})</li>
                 {% endfor %}
             </ul>
