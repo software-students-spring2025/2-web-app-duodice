@@ -12,23 +12,26 @@ Link to User Stories: https://github.com/software-students-spring2025/2-web-app-
 
 ## Steps necessary to run the software
 
-Install and setup [MongoDB](https://www.mongodb.com/) [Server](https://www.mongodb.com/products/platform/atlas-database) + [Client](https://www.mongodb.com/try/download/shell)
-Users will also need to install flask in order to run the sowftware
+- Install and setup [MongoDB](https://www.mongodb.com/) [Server](https://www.mongodb.com/products/platform/atlas-database) + [Client](https://www.mongodb.com/try/download/shell)
 
-Create a .env and store your MongoDB Connection String in a variable and store the cluster you want to connect to in a variable 
-You will need to request acess to the database in order to edit data for a user
-Run these commands on terminal:
-- python -m venv env
-- source env/bin/activate
+- Create a .env in which you will store variables for your MongoDB Connection String and the cluster you will connect to.
+    - You will use this to request access to the database in order to edit data for a user. 
 
-Ensure you are loading your env variables into the code file
+- If desired, create a new python virtual environment to run this code and install packages.
+    - Run these commands on terminal:
+        - python -m venv env
+        - source env/bin/activate
+- Ensure all necessary packages are installed. 
+    - See [requirements.txt](requirements.txt) for necessary libraries and installations.
+    - Ensure each library has been installed within your virtual environment. 
+- Run the app.py code in order to start up the website. 
+- In your browser, navigate to the url "127.0.0.1:5000". 
+- From here, you may create a new user account or login to an existing one. 
+    - To view an account with a lot of information already populated, use the credentials "exampleuser" "password" (please keep edits to this user account to a minimum). 
 
-Test to establish connection with MongoDB and upon successfull connection you are successful
 
-run the app.py code in order to start up the website. A url should be generated, copy and paste the url into the web in order to acess the website
 
-See [requiremnets.txt](requirements.txt) for necessary libraries and installations.
-Ensure all libraries have been installed within your virtual enviornment
+
 
 ## Task boards
 
