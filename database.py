@@ -224,15 +224,14 @@ def add_exams(mydb, userID, classID, date, topics):
 
 # Usage: adds a study session for a specific class to the users profile. Front end needs to collect all the parameters that the function requires and call in the format MongoDB shows
 # Return: 0 if there was an error adding the new study session or 1 if the process was completed without issues
-def add_study_session(mydb, userID, classID, date, duration, goals):
+def add_study_session(mydb, userID, classID, date, duration, complete, incomplete):
     usertable = mydb["Studies"]
     
     exist = usertable.find_one({
         "user_ID": ObjectId(userID),
         "class_ID": ObjectId(classID),
         "date": date,
-        "duration_hours" : duration,
-        "goals_completed": {"$all": goals}  # Ensures all goals exist in the array
+        "duration_mins" : duration,
     })
 
     if (exist):
@@ -244,13 +243,31 @@ def add_study_session(mydb, userID, classID, date, duration, goals):
             "user_ID" : ObjectId(userID),
             "class_ID" : ObjectId(classID),
             "date" : date, # Note date has to be in this format: 2025-03-05T05:00:00.000+00:00
-            "duration_hours" : duration,
-            "goals_completed" : goals
+            "duration_mins" : duration,
+            "goals_completed" : complete, 
+            "goals_incomplete" : incomplete
         }
 
         usertable.insert_one(doc) # Creation of the study_session will assign it a unique ID and if needed can be equated to a variable
 
         print("Study session created!")
+
+        # update class total studied time
+        c = mydb["Class"].find_one({
+            "_id": ObjectId(classID)
+        })
+
+        print('****')
+        print(c)
+        print("8888")
+
+        updates = {'time_studied_mins': c["time_studied_mins"] + duration}
+
+        mydb["Class"].update_one(
+            {"_id": ObjectId(classID)},  
+            {"$set": updates} if "$push" not in updates else updates 
+        )
+
         return (1)
 
 # Usage: adds a task for a specific class to the users profile. Front end needs to collect all the parameters that the function requires and call in the format MongoDB shows

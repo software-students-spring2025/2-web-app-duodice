@@ -8,7 +8,7 @@ import os
 import certifi
 from dotenv import load_dotenv
 from flask_session import Session
-
+import datetime
 
 '''
 notes / instructions
@@ -115,6 +115,8 @@ def show_dashboard():
 @app.route("/study", methods=('GET', 'POST'))
 def show_study():
 
+    
+
     # if we are NOT logged in - redirect to login
     if 'userid' not in session or session['userid'] is None:
         return redirect(url_for('show_login'))
@@ -128,6 +130,17 @@ def show_study():
                 "tasks": database.get_tasks(myDb, ObjectId(session['userid'])), 
                 "study-sessions": database.get_study_sessions(myDb, ObjectId(session['userid']))
             }
+        
+        # covert ObjectIDs to String
+        # convert ObjectId's into type String
+        for i in range(0, len(data["deadlines"])):
+            data["deadlines"][i]["_id"] = str(data["deadlines"][i]["_id"])
+            data["deadlines"][i]["user_ID"] = str(data["deadlines"][i]["user_ID"])
+            data["deadlines"][i]["class_ID"] = str(data["deadlines"][i]["class_ID"])
+        for i in range(0, len(data["classes"])):
+            data["classes"][i]["_id"] = str(data["classes"][i]["_id"])
+            data["classes"][i]["user_ID"] = str(data["classes"][i]["user_ID"])
+        
         return render_template('study_session.html', data=data) # render home page template 
 
 
@@ -273,6 +286,30 @@ def delete_class():
     database.delete_class(myDb, session["userid"], request.form["classid"])
     # reload dashboard
     return redirect(url_for("show_dashboard"))
+
+
+# log new study session
+@app.route("/add-study-session", methods=['POST'])
+def add_study():
+
+    mins_completed = int(request.form['intended-time']) - int(request.form['mins-left'])
+
+    completed = []
+    incomplete = []
+    print(request.form)
+
+    for i in range(1, int(request.form['goal-total']) +1):
+        if 'goal-' + str(i) + '-check' in request.form:
+            if request.form['goal-' + str(i) + '-check'] == 'off':
+                print('x')
+                incomplete += [request.form['goal-' + str(i)]]
+            else:
+                print('y')
+                completed += [request.form['goal-' + str(i)]]
+
+    database.add_study_session(myDb, session['userid'], request.form['class'], datetime.datetime.now(), mins_completed, completed, incomplete)
+
+    return redirect(url_for("show_study"))
 
 # keep alive
 if __name__ == "__main__":
