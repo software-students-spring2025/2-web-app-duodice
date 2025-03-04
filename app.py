@@ -8,7 +8,7 @@ import os
 import certifi
 from dotenv import load_dotenv
 from flask_session import Session
-
+import datetime
 
 '''
 notes / instructions
@@ -42,30 +42,64 @@ def show_dashboard():
     # if we are NOT logged in - redirect to login
     if 'userid' not in session or session['userid'] is None:
         return redirect(url_for('show_login'))
-    print(session)
-    print(session['userid'])
+    
     # if we are logged in (session["userid"] is not None) - load the dashboard page
     # show the dashboard
-    if request.method == "GET":   
+    if request.method == "GET":              
         
-        if 'userid' in session and session['userid'] is not None:
-            data = {
-                "user": database.get_user_info(myDb, ObjectId(session['userid'])),
-                "deadlines": database.get_deadlines(myDb, ObjectId(session['userid'])), 
-                "classes": database.get_classes(myDb, ObjectId(session['userid'])), 
-                "tasks": database.get_tasks(myDb, ObjectId(session['userid'])) 
+        # get all necessary data
+        data = {
+            "user": database.get_user_info(myDb, ObjectId(session['userid'])),
+            "deadlines": database.get_deadlines(myDb, ObjectId(session['userid'])), 
+            "classes": database.get_classes(myDb, ObjectId(session['userid'])), 
+            "tasks": database.get_tasks(myDb, ObjectId(session['userid'])) 
+        }
+
+    
+        # get all SORTED, FILTERED data (if requested)
+        if request.args.get('title') or request.args.get('type') or request.args.get('sort-by'):
+            name = request.args.get('title')
+            dtype = request.args.get("type")
+            sort_by = request.args.get('sort-by')
+
+            data['params'] = {
+                "title": name, 
+                "type": dtype, 
+                "sort-by": sort_by
             }
-            for i in range(0, len(data["deadlines"])):
-                data["deadlines"][i]["_id"] = str(data["deadlines"][i]["_id"])
-                data["deadlines"][i]["user_ID"] = str(data["deadlines"][i]["user_ID"])
-                data["deadlines"][i]["class_ID"] = str(data["deadlines"][i]["class_ID"])
-            for i in range(0, len(data["classes"])):
-                data["classes"][i]["_id"] = str(data["classes"][i]["_id"])
-                data["classes"][i]["user_ID"] = str(data["classes"][i]["user_ID"])
+            if request.args.get('title') == '':
+                name = None
+            if request.args.get('type') == '':
+                dtype = None 
+            if request.args.get('sort-by') == '':
+                sort_by = None 
+
+            data['filtered'] = filter.search_and_sort_all_parameters(myDb, session['userid'], name, dtype, sort_by)
+            for f in data['filtered']:
+                print(f)
+        else:
+            data['filtered'] = data['deadlines']
+            data['params'] = {
+                "title": '', 
+                "type": '', 
+                "sort-by": ''
+            }
+
+        # convert ObjectId's into type String
+        for i in range(0, len(data["deadlines"])):
+            data["deadlines"][i]["_id"] = str(data["deadlines"][i]["_id"])
+            data["deadlines"][i]["user_ID"] = str(data["deadlines"][i]["user_ID"])
+            data["deadlines"][i]["class_ID"] = str(data["deadlines"][i]["class_ID"])
+        for i in range(0, len(data["classes"])):
+            data["classes"][i]["_id"] = str(data["classes"][i]["_id"])
+            data["classes"][i]["user_ID"] = str(data["classes"][i]["user_ID"])
+        for i in range(0, len(data["filtered"])):
+            data["filtered"][i]["_id"] = str(data["filtered"][i]["_id"])
+            data["filtered"][i]["user_ID"] = str(data["filtered"][i]["user_ID"])
+            data["filtered"][i]["class_ID"] = str(data["filtered"][i]["class_ID"])
         
-              
-            
-            return render_template('dashboard.html', data=data) # render home page template 
+        
+        return render_template('dashboard.html', data=data) # render home page template 
         
         
         
@@ -81,6 +115,8 @@ def show_dashboard():
 @app.route("/study", methods=('GET', 'POST'))
 def show_study():
 
+    
+
     # if we are NOT logged in - redirect to login
     if 'userid' not in session or session['userid'] is None:
         return redirect(url_for('show_login'))
@@ -94,6 +130,17 @@ def show_study():
                 "tasks": database.get_tasks(myDb, ObjectId(session['userid'])), 
                 "study-sessions": database.get_study_sessions(myDb, ObjectId(session['userid']))
             }
+        
+        # covert ObjectIDs to String
+        # convert ObjectId's into type String
+        for i in range(0, len(data["deadlines"])):
+            data["deadlines"][i]["_id"] = str(data["deadlines"][i]["_id"])
+            data["deadlines"][i]["user_ID"] = str(data["deadlines"][i]["user_ID"])
+            data["deadlines"][i]["class_ID"] = str(data["deadlines"][i]["class_ID"])
+        for i in range(0, len(data["classes"])):
+            data["classes"][i]["_id"] = str(data["classes"][i]["_id"])
+            data["classes"][i]["user_ID"] = str(data["classes"][i]["user_ID"])
+        
         return render_template('study_session.html', data=data) # render home page template 
 
 
@@ -183,16 +230,9 @@ def edit_profile():
     name = request.form['name']
     age = request.form['age']
     bio = request.form['bio']
-    print("profile edited in backend")
-    data = {
-        "user": {
-            "userID": "",
-            "name": name,
-            "age": age,
-            "username": "John", 
-            "bio": bio
-        }
-    }
+
+    database.edit_profile(myDb, session['userid'], name, age, bio)
+    
     return redirect(url_for('show_profile'))
 
 
@@ -246,6 +286,30 @@ def delete_class():
     database.delete_class(myDb, session["userid"], request.form["classid"])
     # reload dashboard
     return redirect(url_for("show_dashboard"))
+
+
+# log new study session
+@app.route("/add-study-session", methods=['POST'])
+def add_study():
+
+    mins_completed = int(request.form['intended-time']) - int(request.form['mins-left'])
+
+    completed = []
+    incomplete = []
+    print(request.form)
+
+    for i in range(1, int(request.form['goal-total']) +1):
+        if 'goal-' + str(i) + '-check' in request.form:
+            if request.form['goal-' + str(i) + '-check'] == 'off':
+                print('x')
+                incomplete += [request.form['goal-' + str(i)]]
+            else:
+                print('y')
+                completed += [request.form['goal-' + str(i)]]
+
+    database.add_study_session(myDb, session['userid'], request.form['class'], datetime.datetime.now(), mins_completed, completed, incomplete)
+
+    return redirect(url_for("show_study"))
 
 # keep alive
 if __name__ == "__main__":

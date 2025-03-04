@@ -21,6 +21,14 @@
     <div class="container">
         <h1>Study Session</h1>
         <form method="post" action="/add-study-session">
+
+            <label id="select-class">What class are you studying for?</label>
+            <select name="class" id="select-class" required>
+                <option value="">--Select class</option>
+                {% for class in data["classes"] %}
+                <option value="{{class._id}}">{{class.name}}</option>
+                {% endfor %}
+            </select>
             <div class="timer-section">
                 <label for="study-time">Set Study Time (minutes):</label>
                 <input name="intended-time" type="number" id="study-time" min="1" value="25">
@@ -35,6 +43,9 @@
                 <input type="text" id="goal-input" placeholder="Enter a goal">
                 <button type="button" id="add-goal">Add Goal</button>
                 <ul id="goals-list"></ul>
+
+
+                <!-- hidden elements for backend-->
                 <input style="display: none;" value="0" name="goal-total" id="goal-total-counter">
                 <input style="display: none;" value="0" name="mins-left" id="mins-left-counter">
             </div>
@@ -99,8 +110,11 @@
             
             let listItem = document.createElement('li');
             listItem.innerHTML = `
-                <input type="checkbox" class="goal-checkbox" name="goal-${num}" value="${goalText}"}> 
+                
+                <input type="checkbox" class="goal-checkbox" name="goal-${num}-check" value="on"}> 
                 <span class="goal-text">${goalText}</span>
+                <input type="hidden" name="goal-${num}-check" value="off">
+                <input type="hidden" name="goal-${num}" value="${goalText}">
                 <button class="delete-goal">delete</button>
             `;
             goalList.appendChild(listItem);

@@ -45,15 +45,15 @@
             </div>
             <div>
                 <label for="name-input">Name</label>
-                <input name="name" type="text" id="name-input" value="John Doe">
+                <input name="name" type="text" id="name-input" value="{{data['user'].name}}">
             </div>
             <div>
                 <label for="age-input">Age</label>
-                <input name="age" type="number" id="age-input" value="25">
+                <input name="age" type="number" id="age-input" value="{{data['user'].age}}">
             </div>
             <div>
                 <label for="bio-input">Bio</label>
-                <input name="bio" id="bio-input" value="Lorem ipsum dolor sit amet, consectetur adipiscing elit.">
+                <input name="bio" id="bio-input" value="{{data['user'].bio}}">
             </div>
             <button onclick="saveProfile()">Save Changes</button>
             

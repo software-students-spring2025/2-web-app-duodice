@@ -95,3 +95,18 @@ def search_sort_class_deadline(mydb, userID):
 
     return list(my_deadlines)
 
+
+def search_and_sort_all_parameters(mydb, userID, name=None, dtype=None, sort_by=None):
+    usertable = mydb["Deadline"]
+    query_args = {"user_ID" : ObjectId(userID)}
+    if name:
+        query_args["name"] = {"$regex": name, "$options": "i"}
+    if dtype:
+        query_args["type"] = dtype
+    
+    ret = usertable.find(query_args)
+
+    if sort_by:
+        ret.sort(sort_by, 1)
+
+    return list(ret)
