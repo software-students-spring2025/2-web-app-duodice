@@ -1,7 +1,7 @@
-# Install MongoDB using the follow command
-# python -m pip install "pymongo[srv]"
+flask
 pymongo
 --upgrade certifi
 python-dotenv
-
+flask_session
+bson
 
