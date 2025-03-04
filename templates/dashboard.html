@@ -112,7 +112,7 @@ data = {
                 {% for class in data["classes"] %}
                     <li>
                         <h3>{{class.name}}</h3>  
-                        <button onclick="manageClass('{{class._id}}', '{{class.name}}')" id="manage-class-{{class._id}}">Manage Class</button> 
+                        <button onclick="manageClass('{{class._id}}', '{{class.name}}', '{{class.time_studied_mins}}')" id="manage-class-{{class._id}}">Manage Class</button> 
                     </li>
                 {% endfor %}
             </ul>
@@ -221,7 +221,7 @@ data = {
             <div id="study-sessions">
                 <h3>Study Sessions</h3>
                 <ul id="study-session-time">
-                    <p>Total time studied: </p>
+                    <p id="total-time-studied">Total time studied: </p>
                 </ul>
                 <form method="get" action="/study">
                     <button type="submit">Start Study Session</button>
@@ -260,7 +260,7 @@ data = {
         The function will take in the id and name of the class being manipulated
 
         */
-        function manageClass(this_class_id, this_class_name) {
+        function manageClass(this_class_id, this_class_name, time_studied) {
             
             document.getElementById('class-name-header').innerText = `Manage Deadlines and Study Sessions for ${this_class_name}`
             // hiding the class list and showing the task/session container       
@@ -274,6 +274,7 @@ data = {
             }
             document.getElementById('hidden-class-id-input').setAttribute("value", this_class_id)
             document.getElementById("delete-class-input").setAttribute('value', this_class_id)
+            document.getElementById('total-time-studied').innerText = 'Total time studied: ' + String(time_studied) + " minutes"
             
         }
 
