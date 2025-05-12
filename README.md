@@ -44,7 +44,6 @@ Link to User Stories: https://github.com/software-students-spring2025/2-web-app-
         ```bash
         pip install -r requirements.txt
         ```
-    * *(**Note:** The `requirements.txt` file itself should list packages and specific versions, like `pymongo[srv]==3.11.0` or `certifi==2023.7.22`, not pip commands).*
 
 4.  **Run the Application:**
     * Execute the main application file:
